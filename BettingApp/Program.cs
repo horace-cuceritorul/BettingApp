@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,7 @@ namespace BettingApp
     {
         static void Main(string[] args)
         {
-            TimeSpan delay = TimeSpan.FromSeconds(5); //TimeSpan.FromMinutes(5);
+            TimeSpan delay = TimeSpan.FromMinutes(5);
             while (true)
             {
                 try
@@ -107,13 +108,13 @@ namespace BettingApp
                     }
                     Console.WriteLine("{0:MM/dd H:mm:ss}", DateTime.Now);
 
-                    File.AppendAllLines(@"C:\Users\Horatiu\Desktop\betting-output.txt", new string[] {
+                    File.AppendAllLines(ConfigurationManager.AppSettings["outputLocation"], new string[] {
                         string.Format("[{0:MM/dd H:mm:ss}]\t{3}The best rate found was {1:0.00} for the matches {2}", DateTime.Now, minBestRate, JsonConvert.SerializeObject(minBestRateMatch), minBestRate < 1 ? "   BINGO!!  " : "")
                     });
                 }
-                catch(Exception e)
+                catch(AccessViolationException e)
                 {
-                    File.AppendAllLines(@"C:\Users\Horatiu\Desktop\betting-output.txt", new string[] {
+                    File.AppendAllLines(ConfigurationManager.AppSettings["outputLocation"], new string[] {
                         string.Format("[{0:MM/dd H:mm:ss}]\tThere was an error: {1}", DateTime.Now, e.Message)
                     });
                 }

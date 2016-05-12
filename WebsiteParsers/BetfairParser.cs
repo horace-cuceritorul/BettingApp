@@ -87,6 +87,9 @@ namespace WebsiteParsers
             matchDetails.HomeOdds = GetDecimalFromBettingFraction(uiRunnerPrice[0].InnerText) + 1;
             matchDetails.AwayOdds = GetDecimalFromBettingFraction(uiRunnerPrice[1].InnerText) + 1;
 
+            if (matchDetails.HomeOdds < 0 || matchDetails.AwayOdds < 0)
+                return null;
+
             return matchDetails;
         }
 
@@ -95,6 +98,8 @@ namespace WebsiteParsers
             if (fraction.ToLower().Trim() == "evs")
                 return 1;
             string[] numbers = fraction.Split('/');
+            if (numbers.Length != 2)
+                return -100;
             return decimal.Parse(numbers[0]) / decimal.Parse(numbers[1]);
         }
     }
