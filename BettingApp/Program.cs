@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +18,8 @@ namespace BettingApp
     {
         static void Main(string[] args)
         {
-            TimeSpan delay = TimeSpan.FromMinutes(5);
+            TimeSpan delay = TimeSpan.FromMinutes(double.Parse(ConfigurationManager.AppSettings["pollingIntervalMinutes"]));
+            DateTime lastSentEmail = DateTime.Now - TimeSpan.FromHours(1);
             while (true)
             {
                 try
@@ -107,6 +110,12 @@ namespace BettingApp
                         }
                     }
                     Console.WriteLine("{0:MM/dd H:mm:ss}", DateTime.Now);
+
+                    if (minBestRate < 1 && (DateTime.Now - lastSentEmail).Minutes > 15)
+                    {
+                        lastSentEmail = DateTime.Now;
+                        SendEmail(string.Format("[{0:MM/dd H:mm:ss}]\t{3}The best rate found was {1:0.00} for the matches {2}", DateTime.Now, minBestRate, JsonConvert.SerializeObject(minBestRateMatch), minBestRate < 1 ? "   BINGO!!  " : ""));
+                    }
 
                     File.AppendAllLines(ConfigurationManager.AppSettings["outputLocation"], new string[] {
                         string.Format("[{0:MM/dd H:mm:ss}]\t{3}The best rate found was {1:0.00} for the matches {2}", DateTime.Now, minBestRate, JsonConvert.SerializeObject(minBestRateMatch), minBestRate < 1 ? "   BINGO!!  " : "")
@@ -216,6 +225,16 @@ namespace BettingApp
                 }
             return distances[lengthA, lengthB];
         }
+
+        private static void SendEmail(string contents)
+        {
+            var client = new SmtpClient("smtp.gmail.com", 587)
+            {
+                Credentials = new NetworkCredential(ConfigurationManager.AppSettings["userEmail"], ConfigurationManager.AppSettings["emailPassword"]),
+                EnableSsl = true
+            };
+            client.Send(ConfigurationManager.AppSettings["userEmail"], ConfigurationManager.AppSettings["userEmail"], "BettingApp", contents);
+        }
     }
 
     public static class MyExtensions
@@ -226,6 +245,7 @@ namespace BettingApp
         }
 
     }
+
 
 
 }
